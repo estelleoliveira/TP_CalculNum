@@ -52,3 +52,8 @@ $$
 On appelera alors la fonction **dgemv** pour calculer AX, puis on fait tout simplement la différence avec B.  
 Ensuite, on pourra calculer la norme de AX - B, ainsi que celle de B, avec **snrm2**/**scnrm2** ou **dnrm2**/**dznrm2**.  
 Le résidu se calule ensuite en faisant la division entre les deux normes obtenues.
+
+## Mesures de Perfomances : 
+Les mesures de performances permettent de déterminer le temps écoulé pour résoudre avec dgbsv à environ 0.000037 secondes. Pour dgbtrf + dgbtrs, c'est résolu en 0.000047 secondes.  
+L'erreur relative est la même entre les deux méthodes. On peut déterminer le rapport de temps entre les 2 methodes : $$ \text{rapport} = \frac{0.000047}{0.000037} $$  
+On a donc un rapport d'environ 1.27 entre les deux méthodes.

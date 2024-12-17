@@ -5,6 +5,7 @@
 /******************************************/
 #include "lib_poisson1D.h"
 #include <string.h>
+#include <time.h>
 
 #define TRF 0
 #define TRI 1
@@ -71,27 +72,45 @@ int main(int argc,char *argv[])
 
   /* LU Factorization */
   if (IMPLEM == TRF) {
+    time_t starttrf, endtrf;
+    starttrf = clock();
     dgbtrf_(&la, &la, &kl, &ku, AB, &lab, ipiv, &info);
+    endtrf = clock();
+    double eclapsed_time_trf = ((double) (endtrf - starttrf))/CLOCKS_PER_SEC;
+    printf("Eclapsed time dgbtrf in seconds: %f\n", eclapsed_time_trf);
   }
 
   /* LU for tridiagonal matrix  (can replace dgbtrf_) */
   if (IMPLEM == TRI) {
+    time_t starttridiag, endtridiag;
+    starttridiag = clock();
     dgbtrftridiag(&la, &la, &kl, &ku, AB, &lab, ipiv, &info);
+    endtridiag = clock();
+    double eclapsed_time_tridiag = ((double) (endtridiag - starttridiag))/CLOCKS_PER_SEC;
+    printf("Eclapsed time dgbtrf in seconds: %f\n", eclapsed_time_tridiag);
+    
   }
 
   if (IMPLEM == TRI || IMPLEM == TRF){
     /* Solution (Triangular) */
+    time_t startrs, endrs;
+    startrs = clock();
     if (info==0){
       dgbtrs_("N", &la, &kl, &ku, &NRHS, AB, &lab, ipiv, RHS, &la, &info);
       if (info!=0){printf("\n INFO DGBTRS = %d\n",info);}
     }else{
       printf("\n INFO = %d\n",info);
     }
+    endrs = clock();
+
+    double eclapsed_time_rs = ((double)(endrs - startrs))/CLOCKS_PER_SEC;
+    printf("Eclapsed time dgbtrs in seconds: %f\n", eclapsed_time_rs);
   }
 
   /* It can also be solved with dgbsv */
   if (IMPLEM == SV) {
-
+    time_t start, end;
+    start = clock();
     int lb = 2 * kl + ku + 1;
     double *ABnew = (double *) malloc(sizeof(double)* (lb * la));
     memcpy(ABnew, AB, sizeof(double) * (lb * la)); //on copie toute la matrice AB
@@ -100,10 +119,14 @@ int main(int argc,char *argv[])
 
     // Appel de dgbsv (Factorisation LU et résolution du système en une seule étape)
     dgbsv_(&la, &kl, &ku, &NRHS, ABnew, &lb, ipiv, RHS, &la, &info);
+    end = clock();
+
     if (info!=0){printf("\n INFO DGBSV = %d\n",info);}
     else{
       printf("\n INFO = %d\n",info);
     }
+    double eclapsed_time = ((double)(end - start))/CLOCKS_PER_SEC;
+    printf("Eclapsed time dgbsv in seconds: %f\n", eclapsed_time);
     free(ipiv);
     free(ABnew);
   }
