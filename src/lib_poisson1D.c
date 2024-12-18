@@ -86,6 +86,38 @@ int indexABCol(int i, int j, int *lab){
 }
 
 int dgbtrftridiag(int *la, int*n, int *kl, int *ku, double *AB, int *lab, int *ipiv, int *info){
-  int kv = *ku + *kl;
+  int kv = *ku;
+  *info = 0;
+
+  for (int i = 0; i < *la - 1; i++) {
+
+    if (AB[kv + i * (*lab)] == 0.0) {
+      //recherche d'un nouveau pivot
+      int row = i;
+      double val = fabs(AB[kv + i * (*lab)]);
+
+      if (fabs(AB[kv + (i + 1) * (*lab)]) > val) {  //compare le pivot actuel avec l'élément suivant de la ligne suivante pour trouver un meilleur pivot
+        row = i + 1;
+        val = fabs(AB[kv + (i + 1) * (*lab)]);
+          for (int j = 0; j < *lab; j++) {  //on réalise un swap pour que l'élément suivant devienne le pivot
+            double temp = AB[j + i * (*lab)];
+            AB[j + i * (*lab)] = AB[j + row * (*lab)];
+            AB[j + row * (*lab)] = temp;
+        }
+        ipiv[i] = row + 1;  //update tableau des pivots pour remplacer l'ancien pivot par le nouveau
+      }
+      
+      if (val == 0.0) {
+        *info = i + 1; //renvoie l'info de la ligne quand un pivot nul est détecté
+        return *info;
+      }
+
+    }
+    
+    AB[kv + 1 + i * (*lab)] /= AB[kv + i * (*lab)]; //facteur multiplicateur
+    AB[kv + (i + 1) * (*lab)] -= AB[kv + 1 + i * (*lab)] * AB[kv - 1 + (i + 1) * (*lab)]; //update diagonale principale
+  }
+
+  *info = 0;
   return *info;
 }
