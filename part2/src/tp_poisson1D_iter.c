@@ -59,7 +59,7 @@ int main(int argc,char *argv[])
   set_analytical_solution_DBC_1D(EX_SOL, X, &la, &T0, &T1);
   
   write_vec(RHS, &la, "RHS.dat");
-  write_vec(EX_SOL, &la, "EX_SOL.dat");
+  //write_vec(EX_SOL, &la, "EX_SOL.dat");
   write_vec(X, &la, "X_grid.dat");
 
   kv=0;
@@ -91,6 +91,9 @@ int main(int argc,char *argv[])
   /* Solve with Richardson alpha */
   if (IMPLEM == ALPHA) {
     richardson_alpha(AB, RHS, SOL, &opt_alpha, &lab, &la, &ku, &kl, &tol, &maxit, resvec, &nbite);
+    write_vec(resvec, &nbite, "results/Richardson_Alpha/RESVEC.dat");
+    write_vec(SOL, &la, "results/Richardson_Alpha/SOL.dat");
+    write_vec(EX_SOL, &la, "results/Richardson_Alpha/EX_SOL.dat");
   }
 
   /* Richardson General Tridiag */
@@ -100,23 +103,29 @@ int main(int argc,char *argv[])
   ku = 1;
   kl = 1;
   MB = (double *) malloc(sizeof(double)*(lab)*la);
+
   if (IMPLEM == JAC) {
     extract_MB_jacobi_tridiag(AB, MB, &lab, &la, &ku, &kl, &kv);
-  } else if (IMPLEM == GS) {
-    extract_MB_gauss_seidel_tridiag(AB, MB, &lab, &la, &ku, &kl, &kv);
-  }
-
-  /* Solve with General Richardson */
-  if (IMPLEM == JAC || IMPLEM == GS) {
     write_GB_operator_colMajor_poisson1D(MB, &lab, &la, "MB.dat");
     richardson_MB(AB, RHS, SOL, MB, &lab, &la, &ku, &kl, &tol, &maxit, resvec, &nbite);
+    write_vec(resvec, &nbite, "results/Jacobi/RESVEC.dat");
+    write_vec(SOL, &la, "results/Jacobi/SOL.dat");
+    write_vec(EX_SOL, &la, "results/Jacobi/EX_SOL.dat");
+
+  } else if (IMPLEM == GS) {
+    extract_MB_gauss_seidel_tridiag(AB, MB, &lab, &la, &ku, &kl, &kv);
+    write_GB_operator_colMajor_poisson1D(MB, &lab, &la, "MB.dat");
+    richardson_MB(AB, RHS, SOL, MB, &lab, &la, &ku, &kl, &tol, &maxit, resvec, &nbite);
+    write_vec(resvec, &nbite, "results/Gauss-Seidel/RESVEC.dat");
+    write_vec(SOL, &la, "results/Gauss-Seidel/SOL.dat");
+    write_vec(EX_SOL, &la, "results/Gauss-Seidel/EX_SOL.dat");
   }
 
   /* Write solution */
-  write_vec(SOL, &la, "SOL.dat");
+  //write_vec(SOL, &la, "SOL.dat");
 
   /* Write convergence history */
-  write_vec(resvec, &nbite, "RESVEC.dat");
+  //write_vec(resvec, &nbite, "RESVEC.dat");
 
     /* Relative forward error */
   relres = relative_forward_error(SOL, EX_SOL, &la);
