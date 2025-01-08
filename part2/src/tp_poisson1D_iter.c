@@ -137,7 +137,7 @@ int main(int argc,char *argv[])
     poisson1D_CSC(la, values, row_indices, col_ptr);
     
     //résidu initial: v = RHS - AX
-    dcsrmv(la, values, row_indices, col_ptr, SOL, AX);
+    dcscmv(la, values, row_indices, col_ptr, SOL, AX);
     cblas_dcopy(la, RHS, 1, v, 1);                       
     cblas_daxpy(la, -1.0, AX, 1, v, 1);
     resvec[0] = cblas_dnrm2(la, v, 1) / cblas_dnrm2(la, RHS, 1);
@@ -175,7 +175,7 @@ int main(int argc,char *argv[])
     double *v = calloc(la, sizeof(double));
     double *AX = calloc(la, sizeof(double));
     
-    poisson1D_CSC(la, values, col_indices, row_ptr);
+    poisson1D_CSR(la, values, col_indices, row_ptr);
     
     //résidu initial: v = RHS - AX
     dcsrmv(la, values, col_indices, row_ptr, SOL, AX);

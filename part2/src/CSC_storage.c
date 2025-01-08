@@ -29,8 +29,11 @@ void poisson1D_CSC(int la, double *values, int *row_indices, int *col_ptr){
 }
 //produit matrice-vecteur pour CSC
 void dcscmv(int la, double *values, int *row_indices, int *col_ptr, double *x, double *y){
-    for (int i = 0; i < la; ++i){
+    for (int i = 0; i < la; ++i) {
         y[i] = 0.0;
+    }
+
+    for (int i = 0; i < la; ++i){
         for (int j = col_ptr[i]; j < col_ptr[i + 1]; ++j){
             y[row_indices[j]] += values[j] * x[i];
         }
