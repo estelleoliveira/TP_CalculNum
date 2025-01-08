@@ -33,3 +33,7 @@ int indexABCol(int i, int j, int *lab);
 int dgbtrftridiag(int *la, int *n, int *kl, int *ku, double *AB, int *lab, int *ipiv, int *info);
 void poisson1D_CSR(int la, double *values, int *col_indices, int *row_ptr);
 void poisson1D_CSC(int la, double *values, int *row_indices, int *col_ptr);
+void dcscmv(int la, double *values, int *row_indices, int *col_ptr, double *x, double *y);
+void dcsrmv(int la, double *values, int *col_indices, int *row_ptr, double *x, double *y);
+void richardson_alpha_csc(double *values, int *row_indices, int *col_ptr, double *RHS, double *X, double *alpha_rich, int *la, double *tol, int *maxit, double *resvec, int *nbite);
+int richardson_alpha_csr(const double *values, const int *col_indices, const int *row_ptr, const double *b, double *x, int n, double alpha, double tol, int maxiter);

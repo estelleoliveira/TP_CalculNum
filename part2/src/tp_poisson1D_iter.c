@@ -8,6 +8,8 @@
 #define ALPHA 0
 #define JAC 1
 #define GS 2
+#define CSC 3
+#define CSR 4
 
 int main(int argc,char *argv[])
 /* ** argc: Number of arguments */
@@ -112,13 +114,98 @@ int main(int argc,char *argv[])
     write_vec(SOL, &la, "results/Jacobi/SOL.dat");
     write_vec(EX_SOL, &la, "results/Jacobi/EX_SOL.dat");
 
-  } else if (IMPLEM == GS) {
+  } 
+  
+  if (IMPLEM == GS) {
     extract_MB_gauss_seidel_tridiag(AB, MB, &lab, &la, &ku, &kl, &kv);
     write_GB_operator_colMajor_poisson1D(MB, &lab, &la, "MB.dat");
     richardson_MB(AB, RHS, SOL, MB, &lab, &la, &ku, &kl, &tol, &maxit, resvec, &nbite);
     write_vec(resvec, &nbite, "results/Gauss-Seidel/RESVEC.dat");
     write_vec(SOL, &la, "results/Gauss-Seidel/SOL.dat");
     write_vec(EX_SOL, &la, "results/Gauss-Seidel/EX_SOL.dat");
+  }
+
+
+  if (IMPLEM == CSC) {
+    int nnz = 3 * la - 2;
+    double *values = malloc(sizeof(double) * nnz);
+    int *row_indices = malloc(sizeof(int) * nnz);
+    int *col_ptr = malloc(sizeof(int) * (la + 1));
+    double *v = calloc(la, sizeof(double));
+    double *AX = calloc(la, sizeof(double));
+    
+    poisson1D_CSC(la, values, row_indices, col_ptr);
+    
+    //résidu initial: v = RHS - AX
+    dcsrmv(la, values, row_indices, col_ptr, SOL, AX);
+    cblas_dcopy(la, RHS, 1, v, 1);                       
+    cblas_daxpy(la, -1.0, AX, 1, v, 1);
+    resvec[0] = cblas_dnrm2(la, v, 1) / cblas_dnrm2(la, RHS, 1);
+
+    double norm_res = 1.0;
+
+    while (norm_res > tol && nbite < maxit) {
+      cblas_daxpy(la, opt_alpha, v, 1, SOL, 1);
+      
+      dcscmv(la, values, row_indices, col_ptr, SOL, AX);
+      cblas_dcopy(la, RHS, 1, v, 1);
+      cblas_daxpy(la, -1.0, AX, 1, v, 1);
+      
+      norm_res = cblas_dnrm2(la, v, 1);
+      resvec[nbite] = norm_res;
+      nbite++;
+    }
+
+    write_vec(SOL, &la, "results/CSC/SOL.dat");
+    write_vec(resvec, &nbite, "results/CSC/RESVEC.dat");
+    write_vec(EX_SOL, &la, "results/CSC/EX_SOL.dat");
+
+    free(values);
+    free(row_indices);
+    free(col_ptr);
+    free(v);
+    free(AX);
+  }
+
+  if (IMPLEM == CSR) {
+    int nnz = 3 * la - 2;
+    double *values = malloc(sizeof(double) * nnz);
+    int *col_indices = malloc(sizeof(int) * nnz);
+    int *row_ptr = malloc(sizeof(int) * (la + 1));
+    double *v = calloc(la, sizeof(double));
+    double *AX = calloc(la, sizeof(double));
+    
+    poisson1D_CSC(la, values, col_indices, row_ptr);
+    
+    //résidu initial: v = RHS - AX
+    dcsrmv(la, values, col_indices, row_ptr, SOL, AX);
+    cblas_dcopy(la, RHS, 1, v, 1);
+    cblas_daxpy(la, -1.0, AX, 1, v, 1);
+    resvec[0] = cblas_dnrm2(la, v, 1) / cblas_dnrm2(la, RHS, 1);
+
+    double norm_res = 1.0;
+
+    while (norm_res > tol && nbite < maxit) {
+      cblas_daxpy(la, opt_alpha, v, 1, SOL, 1);
+      
+      dcsrmv(la, values, col_indices, row_ptr, SOL, AX);
+      cblas_dcopy(la, RHS, 1, v, 1);
+      cblas_daxpy(la, -1.0, AX, 1, v, 1);
+      
+      norm_res = cblas_dnrm2(la, v, 1);
+      resvec[nbite] = norm_res;
+      nbite++;
+    }
+
+    write_vec(SOL, &la, "results/CSR/SOL.dat");
+    write_vec(resvec, &nbite, "results/CSR/RESVEC.dat");
+    write_vec(EX_SOL, &la, "results/CSR/EX_SOL.dat");
+
+    free(values);
+    free(col_indices);
+    free(row_ptr);
+    free(v);
+    free(AX);
   }
 
   /* Write solution */
